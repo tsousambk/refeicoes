@@ -1,0 +1,2711 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#C06B4A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Refeições">
+<link rel="manifest" href="manifest.json">
+<title>🍽️ Planeamento Familiar</title>
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  /* ── Tema Novo: Blush & Terracota (clean & feminino) ── */
+  --primary: #C06B4A;
+  --primary-light: #D4866A;
+  --primary-dark: #9A4F33;
+  --secondary: #8C7B6B;
+  --secondary-light: #A89585;
+  --bg: #FAF7F4;
+  --surface: #FFFFFF;
+  --surface-2: #F2EDE8;
+  --text-1: #2C2420;
+  --text-2: #7A6A60;
+  --text-3: #B0A09A;
+  --success: #6A9E6F;
+  --warning: #D4956A;
+  --error: #C05050;
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 2px 10px rgba(80,40,20,0.07);
+  --shadow-md: 0 4px 18px rgba(80,40,20,0.11);
+  --shadow-lg: 0 8px 34px rgba(80,40,20,0.15);
+  --nav-height: 60px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --font: 'Nunito', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Dark Mode ── */
+body.dark {
+  --primary: #E8956D;
+  --primary-light: #F0A882;
+  --primary-dark: #C06B4A;
+  --secondary: #A89585;
+  --secondary-light: #BFB0A5;
+  --bg: #1A1512;
+  --surface: #252018;
+  --surface-2: #302820;
+  --text-1: #F0EAE4;
+  --text-2: #B0998C;
+  --text-3: #705A50;
+  --success: #7BBF80;
+  --warning: #E0A870;
+  --error: #D06060;
+  --shadow: 0 2px 10px rgba(0,0,0,0.35);
+  --shadow-md: 0 4px 18px rgba(0,0,0,0.45);
+  --shadow-lg: 0 8px 34px rgba(0,0,0,0.55);
+}
+
+/* ── Theme Toggle Button ── */
+#themeToggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: background 0.2s, transform 0.3s;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+#themeToggle:hover { background: var(--surface-2); transform: rotate(20deg); }
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-1);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+button { border: none; cursor: pointer; font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* ===== GOOGLE FONTS ===== */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+/* ===== LAYOUT ===== */
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  background: var(--bg);
+}
+
+/* ===== TOP HEADER ===== */
+.top-header {
+  background: var(--surface);
+  padding: calc(var(--safe-top) + 12px) 16px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  z-index: 10;
+  flex-shrink: 0;
+}
+.top-header h1 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-1);
+}
+.top-header .subtitle {
+  font-size: 13px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+/* ===== MAIN CONTENT ===== */
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
+}
+.tab-panel { display: none; padding: 16px; }
+.tab-panel.active { display: block; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  background: var(--surface);
+  border-top: 1px solid rgba(0,0,0,0.08);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 6px;
+  z-index: 100;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  background: none;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  position: relative;
+  transition: color 0.2s;
+}
+.nav-item.active { color: var(--primary); }
+.nav-item svg { width: 22px; height: 22px; }
+.nav-badge {
+  position: absolute;
+  top: 3px;
+  right: 50%;
+  transform: translateX(8px);
+  background: var(--error);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+/* ===== WEEK HEADER ===== */
+.week-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.week-nav h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+.week-nav button {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background 0.2s;
+}
+.week-nav button:hover { background: rgba(255,255,255,0.3); }
+.week-progress {
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.progress-bar-wrap {
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+  height: 6px;
+  margin-top: 6px;
+}
+.progress-bar-fill {
+  background: #fff;
+  border-radius: 4px;
+  height: 6px;
+  transition: width 0.5s ease;
+}
+.btn-suggest {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.btn-suggest:hover { background: rgba(255,255,255,0.3); }
+
+/* ===== DAY CARDS ===== */
+.day-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.day-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.day-name {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.day-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.day-dot.has-meals { background: var(--primary); }
+.day-kcal {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+.day-meals {
+  padding: 0 16px 12px;
+  display: none;
+  gap: 8px;
+  flex-direction: column;
+}
+.day-card.open .day-meals { display: flex; }
+.day-card.open .day-chevron { transform: rotate(180deg); }
+.day-chevron { transition: transform 0.25s; color: var(--text-3); }
+
+/* ===== MEAL CHIPS ===== */
+.meal-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 2px solid transparent;
+}
+.meal-chip:hover { background: #EEEEEE; }
+.meal-chip.filled { border-color: var(--primary); background: rgba(192,107,74,0.06); }
+.meal-chip-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meal-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.meal-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.meal-empty {
+  font-size: 14px;
+  color: var(--text-3);
+  font-style: italic;
+}
+.meal-kcal {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+/* ===== REPEAT WARNING ===== */
+.repeat-warning {
+  background: rgba(255,152,0,0.1);
+  border: 1px solid rgba(255,152,0,0.3);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--primary-dark);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== SOBRAS CHECKBOX ===== */
+.sobras-check {
+  background: rgba(192,107,74,0.06);
+  border: 1px solid rgba(192,107,74,0.20);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--primary-dark);
+  font-weight: 600;
+  cursor: pointer;
+  margin: -4px 0 4px;
+}
+.sobras-check input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+/* ===== FAB ===== */
+.fab {
+  position: fixed;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  z-index: 90;
+  transition: transform 0.2s, background 0.2s;
+}
+.fab:hover { transform: scale(1.08); background: var(--primary-dark); }
+.fab.cart { right: calc(16px + 56px + 12px); background: var(--secondary); }
+.fab.cart:hover { background: var(--primary-dark); }
+
+/* ===== SHOPPING TAB ===== */
+.shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.shop-total {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.shop-week {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.shop-progress {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.shop-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.progress-bar-wrap.green { background: var(--surface-2); }
+.progress-bar-fill.green { background: var(--primary); }
+
+.category-group { margin-bottom: 16px; }
+.category-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.shop-item {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 6px;
+  transition: opacity 0.3s;
+}
+.shop-item.done {
+  opacity: 0.5;
+}
+.shop-item.done .shop-item-name {
+  text-decoration: line-through;
+  color: var(--text-3);
+}
+.shop-checkbox {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid #DDD;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  background: var(--surface);
+}
+.shop-checkbox.checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.shop-item-info { flex: 1; }
+.shop-item-name { font-size: 15px; font-weight: 600; }
+.shop-item-qty { font-size: 13px; color: var(--text-2); }
+.shop-item-price { font-size: 13px; color: var(--text-2); font-weight: 500; }
+
+.shop-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.btn-outline {
+  background: var(--surface);
+  border: 2px solid var(--surface-2);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+}
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+.expense-history {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+.expense-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 3px 0;
+}
+.expense-row span:first-child { color: var(--text-2); }
+.expense-row span:last-child { font-weight: 700; color: var(--text-1); }
+
+/* ===== RECIPES TAB ===== */
+.search-bar {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+.search-bar input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 15px;
+  color: var(--text-1);
+  background: none;
+}
+.search-bar input::placeholder { color: var(--text-3); }
+
+.filters-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filters-scroll::-webkit-scrollbar { display: none; }
+.filter-chip {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  color: var(--text-2);
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+.filter-chip.active { border-color: var(--primary); color: var(--primary); background: rgba(192,107,74,0.06); }
+
+.recipes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.recipe-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.recipe-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.recipe-emoji { font-size: 32px; text-align: center; margin-bottom: 4px; }
+.recipe-name { font-size: 14px; font-weight: 700; color: var(--text-1); line-height: 1.3; }
+.recipe-time { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.recipe-stars {
+  display: flex;
+  gap: 1px;
+}
+.star { font-size: 11px; }
+.star.filled { color: #FFB300; }
+.star.empty { color: #DDD; }
+.recipe-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(192,107,74,0.10);
+  color: var(--primary);
+  border-radius: 4px;
+  padding: 2px 6px;
+  align-self: flex-start;
+}
+.recipe-badge.old { background: rgba(245,124,0,0.1); color: var(--secondary); }
+
+.suggestion-section {
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 10px;
+}
+
+/* ===== NUTRITION TAB ===== */
+.nutrition-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+.kcal-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+  margin-top: 12px;
+}
+.kcal-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+.kcal-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.8s ease;
+  min-height: 4px;
+}
+.kcal-bar.good { background: var(--primary); }
+.kcal-bar.warn { background: var(--warning); }
+.kcal-bar.over { background: var(--error); }
+.kcal-day-label { font-size: 10px; font-weight: 700; color: var(--text-2); }
+.kcal-val { font-size: 9px; color: var(--text-2); }
+
+.semaphore {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+.semaphore-item {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  text-align: center;
+}
+.semaphore-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: 0 auto 6px;
+}
+.semaphore-dot.green { background: var(--success); }
+.semaphore-dot.yellow { background: var(--warning); }
+.semaphore-dot.red { background: var(--error); }
+.semaphore-label { font-size: 11px; font-weight: 600; color: var(--text-2); }
+
+.child-panel {
+  background: linear-gradient(135deg, rgba(255,152,0,0.1) 0%, rgba(255,193,7,0.1) 100%);
+  border: 1px solid rgba(255,152,0,0.2);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.child-title { font-size: 15px; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; }
+.child-stat { font-size: 13px; color: var(--text-1); font-weight: 500; }
+
+.spending-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.spend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.spend-label { font-size: 12px; font-weight: 600; color: var(--text-2); width: 60px; }
+.spend-bar-wrap {
+  flex: 1;
+  background: var(--surface-2);
+  border-radius: 4px;
+  height: 12px;
+}
+.spend-bar { height: 12px; border-radius: 4px; background: var(--primary); }
+.spend-val { font-size: 12px; font-weight: 700; color: var(--text-1); width: 40px; text-align: right; }
+
+/* ===== MODAL ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  backdrop-filter: blur(4px);
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 20px calc(20px + var(--safe-bottom));
+  animation: slideUp 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: #DDD;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+
+.modal-field { margin-bottom: 16px; }
+.modal-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; display: block; }
+.modal-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.modal-input:focus { border-color: var(--primary); }
+
+.autocomplete-list {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.autocomplete-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.15s;
+}
+.autocomplete-item:hover { background: var(--surface-2); }
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  width: 100%;
+  text-align: center;
+  transition: background 0.2s;
+}
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary {
+  background: var(--surface-2);
+  color: var(--text-1);
+  border-radius: var(--radius-sm);
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+}
+.btn-danger {
+  background: rgba(244,67,54,0.1);
+  color: var(--error);
+  border-radius: var(--radius-sm);
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ===== RECIPE DETAIL MODAL ===== */
+.recipe-detail-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.recipe-detail-emoji { font-size: 56px; margin-bottom: 8px; }
+.recipe-detail-name { font-size: 20px; font-weight: 800; }
+.recipe-detail-meta {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.recipe-portions-slider {
+  margin: 12px 0;
+}
+.range-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+input[type="range"] {
+  width: 100%;
+  height: 44px;
+  appearance: none;
+  background: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-track {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 2px 8px rgba(192,107,74,0.45);
+  margin-top: -9px;
+}
+.ingredient-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.ingredient-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border-radius: 6px;
+}
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.step-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step-text { font-size: 14px; line-height: 1.5; padding-top: 2px; }
+
+/* ===== STARS RATING ===== */
+.stars-rating {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0;
+}
+.stars-rating .star-btn {
+  font-size: 24px;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.1s;
+  color: #DDD;
+}
+.stars-rating .star-btn.active { color: #FFB300; }
+.stars-rating .star-btn:hover { transform: scale(1.2); }
+
+/* ===== TOAST ===== */
+.toast-container {
+  position: fixed;
+  top: calc(var(--safe-top) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: calc(100% - 32px);
+  max-width: 448px;
+}
+.toast {
+  background: var(--text-1);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  animation: toastIn 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toast.success { background: var(--success); }
+.toast.warning { background: var(--warning); }
+.toast.error { background: var(--error); }
+@keyframes toastIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== SKELETON ===== */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== SETUP SCREEN ===== */
+.setup-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 40px 32px;
+  color: #fff;
+}
+.setup-screen h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; text-align: center; }
+.setup-screen p { font-size: 15px; opacity: 0.85; margin-bottom: 32px; text-align: center; }
+.setup-input {
+  width: 100%;
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-size: 17px;
+  color: #fff;
+  outline: none;
+  margin-bottom: 16px;
+}
+.setup-input::placeholder { color: rgba(255,255,255,0.6); }
+.setup-btn {
+  background: #fff;
+  color: var(--primary);
+  border-radius: var(--radius);
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  width: 100%;
+}
+.setup-emoji { font-size: 72px; margin-bottom: 24px; }
+
+/* ===== SYNC INDICATOR ===== */
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  display: inline-block;
+  margin-left: 6px;
+}
+.sync-dot.syncing { background: var(--warning); animation: pulse 1s infinite; }
+.sync-dot.error { background: var(--error); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ===== ADD ITEM FORM ===== */
+.add-item-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.add-item-form input {
+  flex: 1;
+  background: var(--surface);
+  border: 2px solid var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+}
+.add-item-form input:focus { border-color: var(--primary); }
+.add-item-form button {
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ===== NTFY CONFIG ===== */
+.ntfy-section {
+  background: rgba(192,107,74,0.06);
+  border: 1px solid rgba(192,107,74,0.20);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.ntfy-label { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 6px; }
+.ntfy-input {
+  width: 100%;
+  background: var(--surface);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+}
+.ntfy-input:focus { border-color: var(--primary); }
+
+/* ===== URL CONFIG BANNER ===== */
+.url-banner {
+  background: rgba(245,124,0,0.1);
+  border: 1px solid rgba(245,124,0,0.3);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--primary-dark);
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.url-banner a { text-decoration: underline; word-break: break-all; }
+
+/* ===== CONFETTI ===== */
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: confettiFall 1.5s ease-in forwards;
+}
+@keyframes confettiFall {
+  0%{transform:translateY(-20px) rotate(0deg);opacity:1}
+  100%{transform:translateY(100vh) rotate(720deg);opacity:0}
+}
+
+/* ===== SCROLLBAR ===== */
+.tab-content::-webkit-scrollbar { display: none; }
+
+/* ===== DARK MODE OVERRIDES ===== */
+body.dark .modal {
+  background: var(--surface);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+body.dark .modal-input,
+body.dark .add-item-form input,
+body.dark .ntfy-input,
+body.dark .search-bar input {
+  background: var(--surface-2);
+  color: var(--text-1);
+  border-color: rgba(255,255,255,0.08);
+}
+body.dark .search-bar {
+  background: var(--surface);
+}
+body.dark .shop-checkbox {
+  background: var(--surface-2);
+  border-color: rgba(255,255,255,0.12);
+}
+body.dark .skeleton {
+  background: linear-gradient(90deg, #2a2018 25%, #352820 50%, #2a2018 75%);
+  background-size: 200% 100%;
+}
+body.dark .setup-screen {
+  background: linear-gradient(135deg, #1A1210 0%, #2C1E18 100%);
+}
+body.dark .url-banner {
+  background: rgba(212,133,106,0.1);
+  border-color: rgba(212,133,106,0.3);
+  color: #E8956D;
+}
+body.dark select.modal-input {
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+body.dark .repeat-warning {
+  background: rgba(224,168,112,0.12);
+  border-color: rgba(224,168,112,0.3);
+  color: #E0A870;
+}
+body.dark .week-nav button {
+  background: rgba(255,255,255,0.10);
+}
+body.dark .btn-outline {
+  background: var(--surface);
+  border-color: var(--surface-2);
+  color: var(--text-1);
+}
+body.dark .filter-chip {
+  background: var(--surface);
+  color: var(--text-2);
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-emoji">🍽️</div>
+  <h1>Bem-vindo ao Planeamento Familiar!</h1>
+  <p>Como te chamas? Vamos usar o teu nome para identificar quem fez cada alteração.</p>
+  <input class="setup-input" id="setupName" type="text" placeholder="Ex: Tiago ou Maria" maxlength="20" autocomplete="off">
+  <button class="setup-btn" onclick="finishSetup()">Começar! 🚀</button>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+
+  <!-- TOP HEADER (dynamic per tab) -->
+  <div class="top-header" id="topHeader">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h1 id="headerTitle">🗓️ Planeamento</h1>
+        <div class="subtitle" id="headerSubtitle">Carregando... <span class="sync-dot" id="syncDot"></span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--text-2)" id="headerRight"></div>
+        <button id="themeToggle" onclick="toggleTheme()" title="Alternar modo escuro/claro">☀️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="tab-content">
+
+    <!-- TAB 1: PLANEAMENTO -->
+    <div class="tab-panel active" id="tab-plan">
+      <!-- Week header -->
+      <div class="week-header">
+        <div class="week-nav">
+          <button onclick="changeWeek(-1)">‹</button>
+          <h2 id="weekLabel">Semana de 5–11 Mai</h2>
+          <button onclick="changeWeek(1)">›</button>
+        </div>
+        <div class="week-progress">
+          <div id="progressText">0/10 refeições planeadas</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+          </div>
+        </div>
+        <button class="btn-suggest" onclick="suggestWeek()">✨ Sugerir semana completa</button>
+      </div>
+
+      <!-- URL Banner (if no API set) -->
+      <div class="url-banner" id="urlBanner" style="display:none"></div>
+
+      <!-- Day cards rendered by JS -->
+      <div id="dayCards"></div>
+
+      <!-- FAB: generate shopping list -->
+      <button class="fab cart" onclick="generateShoppingList()" title="Gerar lista de compras">🛒</button>
+    </div>
+
+    <!-- TAB 2: COMPRAS -->
+    <div class="tab-panel" id="tab-shop">
+      <div class="shop-header">
+        <div>
+          <div class="shop-week" id="shopWeekLabel">Semana atual</div>
+          <div class="shop-total" id="shopTotal">~0€</div>
+        </div>
+        <button class="btn-outline" onclick="shareList()">📤 Partilhar</button>
+      </div>
+
+      <div class="shop-progress">
+        <div class="shop-progress-text">
+          <span id="shopProgressText">0/0 itens comprados</span>
+          <span id="shopProgressPct">0%</span>
+        </div>
+        <div class="progress-bar-wrap green">
+          <div class="progress-bar-fill green" id="shopProgressBar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="shop-actions">
+        <button class="btn-outline" onclick="clearDoneItems()">🗑️ Limpar comprados</button>
+        <button class="btn-outline" onclick="copyToWhatsApp()">💬 WhatsApp</button>
+      </div>
+
+      <!-- Add item manually -->
+      <div class="add-item-form">
+        <input type="text" id="newItemInput" placeholder="Adicionar item..." onkeypress="if(event.key==='Enter')addManualItem()">
+        <button onclick="addManualItem()">+</button>
+      </div>
+
+      <!-- Shopping list by category -->
+      <div id="shopList"></div>
+
+      <!-- Expense history -->
+      <div class="expense-history" id="expenseHistory"></div>
+    </div>
+
+    <!-- TAB 3: RECEITAS -->
+    <div class="tab-panel" id="tab-recipes">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" color="#999"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Pesquisar receitas..." id="recipeSearch" oninput="filterRecipes()">
+      </div>
+      <div class="filters-scroll" id="recipeFilters">
+        <button class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">Todas</button>
+        <button class="filter-chip" data-filter="rapida" onclick="setFilter('rapida',this)">⚡ Rápidas</button>
+        <button class="filter-chip" data-filter="saudavel" onclick="setFilter('saudavel',this)">🥗 Saudáveis</button>
+        <button class="filter-chip" data-filter="elaborada" onclick="setFilter('elaborada',this)">👨‍🍳 Elaboradas</button>
+        <button class="filter-chip" data-filter="divertida" onclick="setFilter('divertida',this)">🎉 Divertidas</button>
+        <button class="filter-chip" data-filter="favoritas" onclick="setFilter('favoritas',this)">❤️ Favoritas</button>
+        <button class="filter-chip" data-filter="crianca" onclick="setFilter('crianca',this)">🧒 Criança</button>
+        <button class="filter-chip" data-filter="stock" onclick="setFilter('stock',this)">🏠 Em casa</button>
+      </div>
+
+      <div class="suggestion-section" id="suggestionSection"></div>
+      <div class="recipes-grid" id="recipesGrid"></div>
+
+      <!-- FAB: new recipe -->
+      <button class="fab" onclick="openNewRecipe()" title="Nova receita">+</button>
+    </div>
+
+    <!-- TAB 4: NUTRIÇÃO -->
+    <div class="tab-panel" id="tab-nutrition">
+      <!-- Calories chart -->
+      <div class="nutrition-card">
+        <div class="card-header">
+          <div class="card-title">📊 Calorias por dia</div>
+          <div style="font-size:12px;color:var(--text-2)">Objetivo: 2000 kcal</div>
+        </div>
+        <div class="kcal-chart" id="kcalChart"></div>
+      </div>
+
+      <!-- Semaphore -->
+      <div class="nutrition-card">
+        <div class="card-title" style="margin-bottom:10px">🚦 Semáforo nutricional</div>
+        <div class="semaphore" id="nutritionSemaphore"></div>
+      </div>
+
+      <!-- Child panel -->
+      <div class="child-panel">
+        <div class="child-title">🧒 Painel da Criança (4 anos)</div>
+        <div id="childPanel"></div>
+      </div>
+
+      <!-- Monthly spending -->
+      <div class="nutrition-card">
+        <div class="card-title" style="margin-bottom:6px">💶 Gastos estimados (semanas)</div>
+        <div class="spending-bars" id="spendingBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="plan" onclick="switchTab('plan',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Planeamento
+    </button>
+    <button class="nav-item" data-tab="shop" onclick="switchTab('shop',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Compras
+      <span class="nav-badge" id="shopBadge" style="display:none">0</span>
+    </button>
+    <button class="nav-item" data-tab="recipes" onclick="switchTab('recipes',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+      Receitas
+    </button>
+    <button class="nav-item" data-tab="nutrition" onclick="switchTab('nutrition',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Nutrição
+    </button>
+  </nav>
+</div>
+
+<!-- MODAL: Edit Meal -->
+<div class="modal-backdrop" id="mealModal" onclick="closeMealModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="mealModalTitle">Editar refeição</div>
+    <div class="modal-field">
+      <label class="modal-label">Nome do prato</label>
+      <input class="modal-input" id="mealInput" type="text" placeholder="Pesquisar ou escrever..." oninput="searchAutocomplete()" autocomplete="off">
+      <div id="autocompleteList" class="autocomplete-list" style="display:none"></div>
+    </div>
+    <div class="modal-field" id="mealKcalPreview" style="display:none">
+      <div style="font-size:13px;color:var(--text-2);font-weight:500" id="mealKcalText"></div>
+    </div>
+    <button class="btn-outline" style="width:100%;justify-content:center;margin-bottom:8px" onclick="randomSurprise()">🎲 Surpresa!</button>
+    <button class="btn-primary" onclick="saveMeal()">Guardar</button>
+    <button class="btn-danger" onclick="clearMeal()">Remover refeição</button>
+    <button class="btn-secondary" onclick="closeMealModalDirect()">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL: Recipe Detail -->
+<div class="modal-backdrop" id="recipeModal" onclick="closeRecipeModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="recipeDetailContent"></div>
+  </div>
+</div>
+
+<!-- MODAL: New Recipe -->
+<div class="modal-backdrop" id="newRecipeModal" onclick="closeNewRecipeModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nova Receita</div>
+    <div class="modal-field">
+      <label class="modal-label">Nome da receita</label>
+      <input class="modal-input" id="nr-name" type="text" placeholder="Ex: Bacalhau com natas">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Emoji representativo</label>
+      <input class="modal-input" id="nr-emoji" type="text" placeholder="Ex: 🐟" maxlength="2">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Categoria</label>
+      <select class="modal-input" id="nr-cat">
+        <option value="rapida">⚡ Rápida (&lt;30min)</option>
+        <option value="saudavel">🥗 Saudável</option>
+        <option value="elaborada">👨‍🍳 Elaborada</option>
+        <option value="divertida">🎉 Divertida</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Tempo de preparação (min)</label>
+      <input class="modal-input" id="nr-time" type="number" placeholder="Ex: 30" min="5" max="180">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Calorias estimadas (por porção)</label>
+      <input class="modal-input" id="nr-kcal" type="number" placeholder="Ex: 380" min="100" max="900">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Adequada para criança?</label>
+      <select class="modal-input" id="nr-child">
+        <option value="true">✅ Sim</option>
+        <option value="false">❌ Não</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Ingredientes principais (um por linha)</label>
+      <textarea class="modal-input" id="nr-ingredients" rows="4" placeholder="frango&#10;arroz&#10;tomate&#10;alho"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Modo de preparo (um passo por linha)</label>
+      <textarea class="modal-input" id="nr-steps" rows="5" placeholder="Pré-aquecer o forno a 180°C&#10;Temperar o frango..."></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">A tua avaliação</label>
+      <div class="stars-rating" id="nr-rating">
+        <button class="star-btn" data-v="1" onclick="setNewRating(1)">★</button>
+        <button class="star-btn" data-v="2" onclick="setNewRating(2)">★</button>
+        <button class="star-btn" data-v="3" onclick="setNewRating(3)">★</button>
+        <button class="star-btn" data-v="4" onclick="setNewRating(4)">★</button>
+        <button class="star-btn" data-v="5" onclick="setNewRating(5)">★</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveNewRecipe()">💾 Guardar receita</button>
+    <button class="btn-secondary" onclick="closeNewRecipeModal()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+// ===================================================
+// STATE
+// ===================================================
+let state = {
+  userName: localStorage.getItem('mealplanner_user') || '',
+  currentWeekOffset: 0,
+  currentEditDay: null,
+  currentEditType: null,
+  currentFilter: 'all',
+  newRecipeRating: 4,
+  plan: {}, // { "2024-W20": { "0": { almoco:{}, jantar:{} }, ... } }
+  shopping: {}, // { "2024-W20": [ {item, qty, unit, cat, done, price, autor} ] }
+  recipes: [],
+  history: [], // [ { weekId, dia, tipo, nome } ]
+  config: {},
+  lastSync: null,
+};
+
+// ===================================================
+// CALORIE TABLE (40 Portuguese ingredients)
+// ===================================================
+const KCAL_TABLE = {
+  arroz:130,massa:131,batata:77,pão:265,'frango peito':165,'frango coxa':209,'carne picada':250,
+  bacalhau:82,salmão:208,'atum lata':116,ovo:155,leite:42,queijo:400,manteiga:717,azeite:884,
+  tomate:18,cebola:40,alho:149,cenoura:41,brócolo:34,espinafres:23,feijão:127,grão:164,
+  lentilhas:116,courgette:17,pimento:31,cogumelos:22,maçã:52,banana:89,laranja:47,
+  açúcar:387,farinha:364,natas:195,iogurte:59,fiambre:145,chouriço:455,salpicão:180,
+  'atum fresco':144,dourada:96,pescada:72
+};
+
+// ===================================================
+// DEFAULT RECIPES
+// ===================================================
+const DEFAULT_RECIPES = [
+  { id:1, nome:'Frango assado no forno', emoji:'🍗', categoria:'elaborada', tempo:45, kcal:420, rating:5, crianca:true, vezes:12, ultima:'2024-04-20', tags:['frango','forno'],
+    ingredientes:['frango coxa','batata','alho','azeite','tomate'], steps:['Pré-aquecer o forno a 200°C','Temperar o frango com alho, azeite e sal','Colocar o frango e a batata num tabuleiro','Levar ao forno 45min até dourar'] },
+  { id:2, nome:'Massa à bolonhesa', emoji:'🍝', categoria:'rapida', tempo:25, kcal:380, rating:5, crianca:true, vezes:20, ultima:'2024-04-28',
+    ingredientes:['massa','carne picada','tomate','cebola','alho'], steps:['Cozer a massa al dente','Refogar cebola e alho em azeite','Adicionar carne picada e cozinhar','Juntar tomate e deixar apurar 10min','Misturar com a massa'] },
+  { id:3, nome:'Sopa de legumes com carne', emoji:'🥣', categoria:'saudavel', tempo:35, kcal:180, rating:4, crianca:true, vezes:8, ultima:'2024-04-15',
+    ingredientes:['cenoura','batata','espinafres','carne picada','cebola'], steps:['Refogar cebola em azeite','Adicionar legumes cortados','Cobrir com água e cozinhar 20min','Triturar metade da sopa','Adicionar carne e ferver mais 10min'] },
+  { id:4, nome:'Bacalhau com natas', emoji:'🐟', categoria:'elaborada', tempo:60, kcal:510, rating:5, crianca:false, vezes:6, ultima:'2024-03-30',
+    ingredientes:['bacalhau','natas','batata','cebola','queijo'], steps:['Demolhar o bacalhau 24h','Cozer a batata e o bacalhau','Refogar cebola até caramelizar','Montar em camadas numa travessa','Cobrir com natas e queijo, ir ao forno 30min'] },
+  { id:5, nome:'Arroz de frango', emoji:'🍚', categoria:'rapida', tempo:30, kcal:360, rating:4, crianca:true, vezes:15, ultima:'2024-04-22',
+    ingredientes:['arroz','frango peito','tomate','cebola','alho'], steps:['Saltear frango em pedaços','Adicionar cebola, alho e tomate','Juntar arroz e água (dobro do volume)','Cozinhar 15-18min até o arroz absorver tudo'] },
+  { id:6, nome:'Omelete de legumes', emoji:'🥚', categoria:'rapida', tempo:15, kcal:220, rating:4, crianca:true, vezes:10, ultima:'2024-04-25',
+    ingredientes:['ovo','pimento','espinafres','queijo','cebola'], steps:['Bater 3 ovos por pessoa','Refogar legumes em azeite','Adicionar os ovos e cozinhar em lume médio','Dobrar ao meio e servir'] },
+  { id:7, nome:'Panados de frango com arroz', emoji:'🍖', categoria:'divertida', tempo:30, kcal:450, rating:5, crianca:true, vezes:14, ultima:'2024-04-18',
+    ingredientes:['frango peito','farinha','ovo','arroz','limão'], steps:['Cortar frango em tiras','Passar em farinha, ovo e pão ralado','Fritar em azeite quente','Servir com arroz branco e limão'] },
+  { id:8, nome:'Esparguete carbonara', emoji:'🍜', categoria:'rapida', tempo:20, kcal:490, rating:4, crianca:true, vezes:9, ultima:'2024-04-10',
+    ingredientes:['massa','ovo','queijo','fiambre'], steps:['Cozer o esparguete','Misturar ovos com queijo ralado','Saltear fiambre','Misturar tudo fora do lume para não cozer os ovos'] },
+  { id:9, nome:'Feijão à portuguesa', emoji:'🫘', categoria:'saudavel', tempo:40, kcal:310, rating:4, crianca:true, vezes:7, ultima:'2024-04-05',
+    ingredientes:['feijão','chouriço','tomate','cebola','cenoura'], steps:['Demolhar feijão 8h','Cozer o feijão','Refogar chouriço, cebola e tomate','Juntar o feijão e deixar apurar 15min'] },
+  { id:10, nome:'Peixe grelhado com batata', emoji:'🐠', categoria:'saudavel', tempo:25, kcal:290, rating:3, crianca:true, vezes:5, ultima:'2024-04-01',
+    ingredientes:['dourada','batata','limão','alho','azeite'], steps:['Marinar o peixe com limão e alho','Cozer a batata','Grelhar o peixe 8-10min','Servir com azeite e salada'] },
+  { id:11, nome:'Pizza caseira', emoji:'🍕', categoria:'divertida', tempo:50, kcal:520, rating:5, crianca:true, vezes:8, ultima:'2024-04-12',
+    ingredientes:['farinha','tomate','queijo','fiambre','pimento'], steps:['Fazer a massa com farinha, água, fermento e sal','Deixar levedar 30min','Estender e adicionar molho de tomate','Cobrir com ingredientes e levar ao forno 15min a 220°C'] },
+  { id:12, nome:'Caldo verde', emoji:'🥬', categoria:'saudavel', tempo:30, kcal:160, rating:4, crianca:true, vezes:11, ultima:'2024-03-28',
+    ingredientes:['batata','espinafres','chouriço','cebola','alho'], steps:['Cozer batata com cebola e alho','Triturar','Adicionar couve finamente cortada','Juntar chouriço e ferver 5min'] },
+  { id:13, nome:'Frango no wok com legumes', emoji:'🥢', categoria:'rapida', tempo:20, kcal:320, rating:4, crianca:false, vezes:6, ultima:'2024-04-08',
+    ingredientes:['frango peito','courgette','pimento','cenoura','cogumelos'], steps:['Cortar tudo em tiras finas','Saltear frango em wok a alta temperatura','Adicionar legumes e saltear 5min','Temperar com molho de soja'] },
+  { id:14, nome:'Lasanha de carne', emoji:'🫕', categoria:'elaborada', tempo:70, kcal:480, rating:5, crianca:true, vezes:5, ultima:'2024-03-20',
+    ingredientes:['massa','carne picada','tomate','queijo','natas'], steps:['Preparar molho bolonhesa','Preparar molho béchamel com natas','Montar camadas: massa, bolonhesa, béchamel, queijo','Repetir e cobrir com queijo','Forno 180°C por 40min'] },
+  { id:15, nome:'Salada de massa com atum', emoji:'🥗', categoria:'rapida', tempo:15, kcal:340, rating:3, crianca:true, vezes:8, ultima:'2024-04-26',
+    ingredientes:['massa','atum lata','tomate','ovo','cenoura'], steps:['Cozer a massa e deixar arrefecer','Misturar atum, tomate e cenoura ralada','Juntar a massa e temperar com azeite e limão','Colocar ovo cozido por cima'] },
+];
+
+// ===================================================
+// INIT
+// ===================================================
+function init() {
+  if (!state.userName) {
+    document.getElementById('setupScreen').style.display = 'flex';
+    return;
+  }
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  // Load local data
+  loadLocalData();
+
+  // Render all
+  renderCurrentWeek();
+  renderShopping();
+  renderRecipes();
+  renderNutrition();
+  updateShopBadge();
+
+  // Hide URL banner (Supabase is always available)
+  const banner = document.getElementById('urlBanner');
+  if (banner) banner.style.display = 'none';
+
+  // Start Supabase sync
+  startSync();
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    registerSW();
+  }
+
+  showToast('👋 Olá, ' + state.userName + '!', 'success');
+}
+
+function finishSetup() {
+  const name = document.getElementById('setupName').value.trim();
+  if (!name) { showToast('Escreve o teu nome!', 'error'); return; }
+  state.userName = name;
+  localStorage.setItem('mealplanner_user', name);
+  init();
+}
+
+// ===================================================
+// LOCAL DATA
+// ===================================================
+function loadLocalData() {
+  const plan = localStorage.getItem('mealplanner_plan');
+  const shop = localStorage.getItem('mealplanner_shop');
+  const recipes = localStorage.getItem('mealplanner_recipes');
+  const history = localStorage.getItem('mealplanner_history');
+
+  state.plan = plan ? JSON.parse(plan) : {};
+  state.shopping = shop ? JSON.parse(shop) : {};
+  state.recipes = recipes ? JSON.parse(recipes) : DEFAULT_RECIPES;
+  state.history = history ? JSON.parse(history) : [];
+
+  if (!recipes) saveRecipes();
+}
+
+function savePlan() {
+  localStorage.setItem('mealplanner_plan', JSON.stringify(state.plan));
+}
+
+function saveRecipes() {
+  localStorage.setItem('mealplanner_recipes', JSON.stringify(state.recipes));
+}
+
+function saveShopping() {
+  localStorage.setItem('mealplanner_shop', JSON.stringify(state.shopping));
+}
+
+function saveHistory() {
+  localStorage.setItem('mealplanner_history', JSON.stringify(state.history));
+}
+
+// ===================================================
+// WEEK UTILITIES
+// ===================================================
+function getWeekId(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset * 7);
+  const year = d.getFullYear();
+  const week = getISOWeek(d);
+  return `${year}-W${String(week).padStart(2,'0')}`;
+}
+
+function getISOWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+function getWeekStartEnd(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset * 7);
+  // Sunday as start
+  const day = d.getDay();
+  const sunday = new Date(d);
+  sunday.setDate(d.getDate() - day);
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  const fmt = (dt) => dt.getDate() + ' ' + ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][dt.getMonth()];
+  return `${fmt(sunday)} – ${fmt(saturday)}`;
+}
+
+function changeWeek(dir) {
+  state.currentWeekOffset += dir;
+  renderCurrentWeek();
+  renderNutrition();
+}
+
+// ===================================================
+// PLAN RENDERING
+// ===================================================
+const DAYS = [
+  { idx:0, name:'Domingo', emoji:'☀️', types:['almoco','jantar'] },
+  { idx:1, name:'Segunda', emoji:'💼', types:['marmita','jantar'] },
+  { idx:2, name:'Terça',   emoji:'💼', types:['marmita','jantar'] },
+  { idx:3, name:'Quarta',  emoji:'💼', types:['marmita','jantar'] },
+  { idx:4, name:'Quinta',  emoji:'💼', types:['marmita','jantar'] },
+  { idx:5, name:'Sexta',   emoji:'💼', types:['marmita','jantar'] },
+  { idx:6, name:'Sábado',  emoji:'🌿', types:['almoco','jantar'] },
+];
+
+const TYPE_LABELS = { marmita:'🍱 Marmita', almoco:'🍽️ Almoço', jantar:'🌙 Jantar' };
+
+function getMealData(weekId, dayIdx, type) {
+  return state.plan[weekId]?.[dayIdx]?.[type] || null;
+}
+
+function setMealData(weekId, dayIdx, type, data) {
+  if (!state.plan[weekId]) state.plan[weekId] = {};
+  if (!state.plan[weekId][dayIdx]) state.plan[weekId][dayIdx] = {};
+  state.plan[weekId][dayIdx][type] = data;
+  savePlan();
+}
+
+function renderCurrentWeek() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const label = getWeekStartEnd(state.currentWeekOffset);
+  document.getElementById('weekLabel').textContent = `Semana de ${label}`;
+  document.getElementById('headerSubtitle').innerHTML = `${weekId} <span class="sync-dot" id="syncDot"></span>`;
+  document.getElementById('shopWeekLabel').textContent = `Semana de ${label}`;
+
+  // Progress
+  let totalMeals = 0, filledMeals = 0;
+  DAYS.forEach(d => {
+    d.types.forEach(t => {
+      totalMeals++;
+      if (getMealData(weekId, d.idx, t)) filledMeals++;
+    });
+  });
+  document.getElementById('progressText').textContent = `${filledMeals}/${totalMeals} refeições planeadas`;
+  document.getElementById('progressBar').style.width = `${(filledMeals/totalMeals)*100}%`;
+
+  // Detect repeats
+  const mealCount = {};
+  DAYS.forEach(d => {
+    d.types.forEach(t => {
+      const m = getMealData(weekId, d.idx, t);
+      if (m?.nome) mealCount[m.nome] = (mealCount[m.nome]||0) + 1;
+    });
+  });
+  const repeats = Object.entries(mealCount).filter(([,c]) => c >= 3).map(([n,c]) => `${n} aparece ${c}×`);
+
+  // Render day cards
+  const container = document.getElementById('dayCards');
+  container.innerHTML = '';
+
+  // Repeat warning global
+  if (repeats.length) {
+    const warn = document.createElement('div');
+    warn.className = 'repeat-warning';
+    warn.innerHTML = '⚠️ ' + repeats.join(' | ') + ' esta semana';
+    container.appendChild(warn);
+  }
+
+  DAYS.forEach(d => {
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'day-card';
+    dayDiv.id = `day-${d.idx}`;
+
+    let dayKcal = 0;
+    let hasMeals = false;
+
+    const mealsHtml = d.types.map(t => {
+      const meal = getMealData(weekId, d.idx, t);
+      if (meal) { dayKcal += meal.kcal || 0; hasMeals = true; }
+      return `
+        <div class="meal-chip ${meal ? 'filled' : ''}" onclick="openMealModal(${d.idx},'${t}')">
+          <div class="meal-chip-left">
+            <div>
+              <div class="meal-label">${TYPE_LABELS[t]}</div>
+              ${meal
+                ? `<div class="meal-name">${meal.nome}</div>`
+                : `<div class="meal-empty">Toca para adicionar...</div>`
+              }
+            </div>
+          </div>
+          ${meal?.kcal ? `<div class="meal-kcal">${meal.kcal} kcal</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    // Sobras domingo→segunda
+    let sobrasHtml = '';
+    if (d.idx === 0) {
+      const sundayJantar = getMealData(weekId, 0, 'jantar');
+      if (sundayJantar) {
+        sobrasHtml = `
+          <label class="sobras-check">
+            <input type="checkbox" id="sobras-${weekId}" onchange="applySobras(this,'${weekId}','${sundayJantar.nome}',${sundayJantar.kcal})" ${getMealData(weekId, 1, 'marmita')?.nome === sundayJantar.nome ? 'checked' : ''}>
+            Usar sobras (${sundayJantar.nome}) como marmita de segunda-feira?
+          </label>`;
+      }
+    }
+
+    dayDiv.innerHTML = `
+      <div class="day-card-header" onclick="toggleDay(${d.idx})">
+        <div class="day-name">
+          <div class="day-dot ${hasMeals?'has-meals':''}"></div>
+          ${d.emoji} ${d.name}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${dayKcal ? `<div class="day-kcal">${dayKcal} kcal</div>` : ''}
+          <svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="day-meals">
+        ${sobrasHtml}
+        ${mealsHtml}
+      </div>
+    `;
+    container.appendChild(dayDiv);
+  });
+}
+
+function toggleDay(idx) {
+  const card = document.getElementById(`day-${idx}`);
+  card.classList.toggle('open');
+}
+
+function applySobras(checkbox, weekId, nome, kcal) {
+  if (checkbox.checked) {
+    setMealData(weekId, 1, 'marmita', { nome, kcal, autor: state.userName });
+    showToast('✅ Sobras copiadas para segunda-feira!', 'success');
+  } else {
+    setMealData(weekId, 1, 'marmita', null);
+  }
+  renderCurrentWeek();
+  syncToServer();
+}
+
+// ===================================================
+// MEAL MODAL
+// ===================================================
+let editWeekId, editDay, editType;
+
+function openMealModal(dayIdx, type) {
+  editWeekId = getWeekId(state.currentWeekOffset);
+  editDay = dayIdx;
+  editType = type;
+  const meal = getMealData(editWeekId, dayIdx, type);
+  document.getElementById('mealModalTitle').textContent = TYPE_LABELS[type] + ' — ' + DAYS[dayIdx].name;
+  document.getElementById('mealInput').value = meal?.nome || '';
+  document.getElementById('mealKcalPreview').style.display = 'none';
+  document.getElementById('autocompleteList').style.display = 'none';
+  document.getElementById('mealModal').classList.add('open');
+  setTimeout(() => document.getElementById('mealInput').focus(), 300);
+}
+
+function closeMealModal(e) {
+  if (e.target === e.currentTarget) closeMealModalDirect();
+}
+function closeMealModalDirect() {
+  document.getElementById('mealModal').classList.remove('open');
+  document.getElementById('autocompleteList').style.display = 'none';
+}
+
+function searchAutocomplete() {
+  const q = document.getElementById('mealInput').value.toLowerCase().trim();
+  const list = document.getElementById('autocompleteList');
+  if (!q) { list.style.display = 'none'; return; }
+  const matches = state.recipes.filter(r => r.nome.toLowerCase().includes(q)).slice(0,5);
+  if (!matches.length) { list.style.display = 'none'; return; }
+  list.innerHTML = matches.map(r =>
+    `<div class="autocomplete-item" onclick="selectRecipeForMeal(${r.id})">
+      ${r.emoji||'🍽️'} <div><div style="font-weight:600">${r.nome}</div><div style="font-size:12px;color:var(--text-2)">${r.kcal} kcal · ${r.tempo}min</div></div>
+    </div>`
+  ).join('');
+  list.style.display = 'block';
+}
+
+function selectRecipeForMeal(id) {
+  const r = state.recipes.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('mealInput').value = r.nome;
+  document.getElementById('autocompleteList').style.display = 'none';
+  document.getElementById('mealKcalText').textContent = `🔥 ${r.kcal} kcal · ⏱️ ${r.tempo}min · ${r.ingredientes?.join(', ')||''}`;
+  document.getElementById('mealKcalPreview').style.display = 'block';
+}
+
+function saveMeal() {
+  const nome = document.getElementById('mealInput').value.trim();
+  if (!nome) { showToast('Escreve o nome do prato!', 'error'); return; }
+  const recipe = state.recipes.find(r => r.nome.toLowerCase() === nome.toLowerCase());
+  const data = {
+    nome,
+    kcal: recipe?.kcal || 350,
+    autor: state.userName,
+    ts: new Date().toISOString(),
+  };
+  setMealData(editWeekId, editDay, editType, data);
+
+  // Add to history
+  state.history.push({ weekId: editWeekId, dia: editDay, tipo: editType, nome });
+  saveHistory();
+
+  closeMealModalDirect();
+  renderCurrentWeek();
+  updateNutrition();
+  syncToServer();
+  showToast('✅ Refeição guardada!', 'success');
+}
+
+function clearMeal() {
+  setMealData(editWeekId, editDay, editType, null);
+  closeMealModalDirect();
+  renderCurrentWeek();
+  syncToServer();
+  showToast('🗑️ Refeição removida', 'warning');
+}
+
+function randomSurprise() {
+  const favorites = state.recipes.filter(r => r.rating >= 4);
+  const pick = favorites[Math.floor(Math.random() * favorites.length)];
+  if (pick) {
+    document.getElementById('mealInput').value = pick.nome;
+    searchAutocomplete();
+    selectRecipeForMeal(pick.id);
+  }
+}
+
+// ===================================================
+// SUGGEST WEEK
+// ===================================================
+function suggestWeek() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const recentNames = new Set(state.history.slice(-40).map(h => h.nome));
+  const eligible = state.recipes.filter(r => r.rating >= 4 && !recentNames.has(r.nome));
+  const pool = eligible.length >= 6 ? eligible : state.recipes.filter(r => r.rating >= 3);
+
+  let used = 0;
+  DAYS.forEach(d => {
+    d.types.forEach(t => {
+      if (!getMealData(weekId, d.idx, t)) {
+        const pick = pool[used % pool.length];
+        if (pick) {
+          setMealData(weekId, d.idx, t, { nome: pick.nome, kcal: pick.kcal, autor: state.userName });
+          used++;
+        }
+      }
+    });
+  });
+
+  renderCurrentWeek();
+  syncToServer();
+  showToast('✨ Semana sugerida! Ajusta como quiseres.', 'success');
+  confetti();
+}
+
+// ===================================================
+// SHOPPING
+// ===================================================
+const CATEGORIES = {
+  'frutas_legumes': { label:'🥦 Frutas & Legumes', items:['tomate','cenoura','brócolo','espinafres','courgette','pimento','cebola','alho','maçã','banana','laranja'] },
+  'proteinas': { label:'🥩 Proteínas', items:['frango peito','frango coxa','carne picada','bacalhau','salmão','atum lata','atum fresco','dourada','pescada','ovo','fiambre','chouriço','salpicão'] },
+  'laticinios': { label:'🧀 Laticínios', items:['leite','queijo','manteiga','natas','iogurte'] },
+  'secos_conservas': { label:'🫙 Secos & Conservas', items:['arroz','massa','batata','pão','feijão','grão','lentilhas','farinha','açúcar','azeite'] },
+  'outros': { label:'🛒 Outros', items:[] },
+};
+
+function categorizeItem(itemName) {
+  const lower = itemName.toLowerCase();
+  for (const [cat, info] of Object.entries(CATEGORIES)) {
+    if (info.items.some(i => lower.includes(i) || i.includes(lower))) return cat;
+  }
+  return 'outros';
+}
+
+function generateShoppingList() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const items = {};
+
+  DAYS.forEach(d => {
+    d.types.forEach(t => {
+      const meal = getMealData(weekId, d.idx, t);
+      if (meal?.nome) {
+        const recipe = state.recipes.find(r => r.nome === meal.nome);
+        if (recipe?.ingredientes) {
+          recipe.ingredientes.forEach(ing => {
+            const key = ing.toLowerCase().trim();
+            if (items[key]) items[key].count++;
+            else items[key] = { item: ing, count: 1, cat: categorizeItem(ing), done: false, price: estimatePrice(ing) };
+          });
+        } else {
+          const key = meal.nome.toLowerCase();
+          if (!items[key]) items[key] = { item: meal.nome, count: 1, cat: 'outros', done: false, price: 0 };
+        }
+      }
+    });
+  });
+
+  state.shopping[weekId] = Object.values(items);
+  saveShopping();
+  renderShopping();
+  switchTab('shop', document.querySelector('[data-tab="shop"]'));
+  syncShoppingToSupabase();
+  showToast(`🛒 Lista gerada com ${Object.keys(items).length} itens!`, 'success');
+}
+
+function estimatePrice(ing) {
+  const prices = { arroz:1.2,massa:1.1,batata:0.8,pão:1.5,frango:3.5,'carne picada':4.5,bacalhau:6,salmão:8,'atum lata':1.8,ovo:2,leite:0.9,queijo:3.5,tomate:1.2,cebola:0.6,alho:0.5,cenoura:0.7 };
+  const lower = ing.toLowerCase();
+  for (const [k,v] of Object.entries(prices)) {
+    if (lower.includes(k)) return v;
+  }
+  return 2;
+}
+
+function renderShopping() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const items = state.shopping[weekId] || [];
+
+  // Stats
+  const total = items.reduce((a,i) => a + (i.price||0), 0);
+  const done = items.filter(i => i.done).length;
+  document.getElementById('shopTotal').textContent = `~${total.toFixed(0)}€`;
+  document.getElementById('shopProgressText').textContent = `${done}/${items.length} itens comprados`;
+  const pct = items.length ? Math.round((done/items.length)*100) : 0;
+  document.getElementById('shopProgressPct').textContent = `${pct}%`;
+  document.getElementById('shopProgressBar').style.width = `${pct}%`;
+
+  // Badge
+  const pending = items.filter(i => !i.done).length;
+  const badge = document.getElementById('shopBadge');
+  badge.textContent = pending;
+  badge.style.display = pending > 0 ? 'flex' : 'none';
+
+  if (!items.length) {
+    document.getElementById('shopList').innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--text-3)">
+        <div style="font-size:48px">🛒</div>
+        <div style="font-size:15px;font-weight:600;margin-top:8px">Lista vazia</div>
+        <div style="font-size:13px;margin-top:4px">Vai ao Planeamento e toca em 🛒 para gerar a lista</div>
+      </div>`;
+    return;
+  }
+
+  // Group by category
+  const byCategory = {};
+  items.forEach((item, idx) => {
+    const cat = item.cat || 'outros';
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push({ ...item, idx });
+  });
+
+  let html = '';
+  for (const [cat, catItems] of Object.entries(CATEGORIES)) {
+    const group = byCategory[cat];
+    if (!group) continue;
+    html += `<div class="category-group">
+      <div class="category-title">${catItems.label}</div>
+      ${group.map(item => `
+        <div class="shop-item ${item.done ? 'done' : ''}" id="shopitem-${item.idx}">
+          <div class="shop-checkbox ${item.done ? 'checked' : ''}" onclick="toggleShopItem('${weekId}',${item.idx})">
+            ${item.done ? '✓' : ''}
+          </div>
+          <div class="shop-item-info">
+            <div class="shop-item-name">${item.item}</div>
+            ${item.count > 1 ? `<div class="shop-item-qty">${item.count}× uso(s)</div>` : ''}
+          </div>
+          ${item.price ? `<div class="shop-item-price">~${item.price.toFixed(1)}€</div>` : ''}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+  // Outros
+  const outros = byCategory['outros'];
+  if (outros) {
+    html += `<div class="category-group">
+      <div class="category-title">${CATEGORIES.outros.label}</div>
+      ${outros.map(item => `
+        <div class="shop-item ${item.done ? 'done' : ''}" id="shopitem-${item.idx}">
+          <div class="shop-checkbox ${item.done ? 'checked' : ''}" onclick="toggleShopItem('${weekId}',${item.idx})">
+            ${item.done ? '✓' : ''}
+          </div>
+          <div class="shop-item-info">
+            <div class="shop-item-name">${item.item}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  document.getElementById('shopList').innerHTML = html;
+
+  // Expense history (mock last 4 weeks)
+  document.getElementById('expenseHistory').innerHTML = `
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px">💶 Histórico de gastos</div>
+    <div class="expense-row"><span>Esta semana (estimado)</span><span>~${total.toFixed(0)}€</span></div>
+    <div class="expense-row"><span>Semana passada</span><span>~${(total*0.9+5).toFixed(0)}€</span></div>
+    <div class="expense-row"><span>Este mês (estimado)</span><span>~${(total*4.2).toFixed(0)}€</span></div>
+  `;
+}
+
+function toggleShopItem(weekId, idx) {
+  state.shopping[weekId][idx].done = !state.shopping[weekId][idx].done;
+  state.shopping[weekId][idx].autor = state.userName;
+  saveShopping();
+  renderShopping();
+  syncShoppingToSupabase();
+}
+
+function clearDoneItems() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  if (state.shopping[weekId]) {
+    state.shopping[weekId] = state.shopping[weekId].filter(i => !i.done);
+    saveShopping();
+    renderShopping();
+    showToast('🗑️ Itens comprados removidos', 'warning');
+  }
+}
+
+function addManualItem() {
+  const input = document.getElementById('newItemInput');
+  const name = input.value.trim();
+  if (!name) return;
+  const weekId = getWeekId(state.currentWeekOffset);
+  if (!state.shopping[weekId]) state.shopping[weekId] = [];
+  state.shopping[weekId].push({ item: name, count: 1, cat: categorizeItem(name), done: false, price: 0, autor: state.userName });
+  saveShopping();
+  renderShopping();
+  input.value = '';
+  syncShoppingToSupabase();
+  showToast('✅ Item adicionado!', 'success');
+}
+
+function updateShopBadge() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const items = state.shopping[weekId] || [];
+  const pending = items.filter(i => !i.done).length;
+  const badge = document.getElementById('shopBadge');
+  badge.textContent = pending;
+  badge.style.display = pending > 0 ? 'flex' : 'none';
+}
+
+function shareList() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const items = state.shopping[weekId] || [];
+  const text = `🛒 Lista de compras (${getWeekStartEnd(state.currentWeekOffset)})\n\n` +
+    items.filter(i => !i.done).map(i => `□ ${i.item}`).join('\n');
+  if (navigator.share) {
+    navigator.share({ title: 'Lista de compras', text });
+  } else {
+    navigator.clipboard.writeText(text);
+    showToast('📋 Lista copiada!', 'success');
+  }
+}
+
+function copyToWhatsApp() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const items = state.shopping[weekId] || [];
+  const text = `🛒 *Lista de compras*\n\n` + items.filter(i => !i.done).map(i => `• ${i.item}`).join('\n');
+  navigator.clipboard.writeText(text);
+  showToast('📋 Lista copiada para WhatsApp!', 'success');
+}
+
+// ===================================================
+// RECIPES
+// ===================================================
+let currentFilter = 'all';
+let stockIngredients = new Set();
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderRecipes();
+}
+
+function filterRecipes() {
+  renderRecipes();
+}
+
+function getWeeksAgo(dateStr) {
+  if (!dateStr) return 99;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return Math.round((now - d) / (7 * 24 * 3600 * 1000));
+}
+
+function renderRecipes() {
+  const query = document.getElementById('recipeSearch')?.value?.toLowerCase() || '';
+  let recipes = state.recipes;
+
+  if (query) recipes = recipes.filter(r => r.nome.toLowerCase().includes(query) || r.ingredientes?.some(i => i.toLowerCase().includes(query)));
+
+  if (currentFilter === 'rapida') recipes = recipes.filter(r => r.categoria === 'rapida' || r.tempo <= 30);
+  else if (currentFilter === 'saudavel') recipes = recipes.filter(r => r.categoria === 'saudavel');
+  else if (currentFilter === 'elaborada') recipes = recipes.filter(r => r.categoria === 'elaborada');
+  else if (currentFilter === 'divertida') recipes = recipes.filter(r => r.categoria === 'divertida');
+  else if (currentFilter === 'favoritas') recipes = recipes.filter(r => r.rating >= 4);
+  else if (currentFilter === 'crianca') recipes = recipes.filter(r => r.crianca);
+  else if (currentFilter === 'stock') recipes = recipes.filter(r =>
+    stockIngredients.size === 0 || r.ingredientes?.some(i => stockIngredients.has(i.toLowerCase()))
+  );
+
+  // Suggestions (not made in 2+ weeks, rating >= 4)
+  const suggestions = state.recipes.filter(r => r.rating >= 4 && getWeeksAgo(r.ultima) >= 2).slice(0,3);
+  const suggestSection = document.getElementById('suggestionSection');
+  if (suggestions.length && !query) {
+    suggestSection.innerHTML = `<div class="section-title">💡 Sugestão da semana</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">
+        ${suggestions.map(r => `
+          <div style="background:var(--surface);border-radius:var(--radius-sm);padding:12px;min-width:140px;box-shadow:var(--shadow);cursor:pointer;flex-shrink:0" onclick="openRecipeDetail(${r.id})">
+            <div style="font-size:24px;text-align:center">${r.emoji||'🍽️'}</div>
+            <div style="font-size:13px;font-weight:700;text-align:center;margin-top:4px">${r.nome}</div>
+            <div style="font-size:11px;color:var(--secondary);text-align:center;font-weight:600">Há ${getWeeksAgo(r.ultima)} sem.</div>
+          </div>
+        `).join('')}
+      </div>`;
+  } else {
+    suggestSection.innerHTML = '';
+  }
+
+  // Grid
+  const grid = document.getElementById('recipesGrid');
+  grid.innerHTML = recipes.map(r => {
+    const weeksAgo = getWeeksAgo(r.ultima);
+    const stars = Array.from({length:5}, (_,i) =>
+      `<span class="star ${i < r.rating ? 'filled':'empty'}">★</span>`).join('');
+    let badge = '';
+    if (weeksAgo >= 2) badge = `<span class="recipe-badge old">Há ${weeksAgo} sem.</span>`;
+    return `
+      <div class="recipe-card" onclick="openRecipeDetail(${r.id})">
+        <div class="recipe-emoji">${r.emoji||'🍽️'}</div>
+        <div class="recipe-name">${r.nome}</div>
+        <div class="recipe-time">⏱️ ${r.tempo}min · 🔥 ${r.kcal}kcal</div>
+        <div class="recipe-stars">${stars}</div>
+        ${badge}
+        ${r.crianca ? '<span class="recipe-badge">🧒 Criança</span>' : ''}
+      </div>`;
+  }).join('');
+}
+
+function openRecipeDetail(id) {
+  const r = state.recipes.find(x => x.id === id);
+  if (!r) return;
+  const stars = Array.from({length:5}, (_,i) =>
+    `<span class="star ${i < r.rating ? 'filled':'empty'}">★</span>`).join('');
+  const steps = r.steps || ['Preparar os ingredientes', 'Cozinhar conforme descrito', 'Servir e saborear!'];
+  const stepsHtml = steps.map((s,i) =>
+    `<div class="step-item"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`
+  ).join('');
+  const ingsHtml = (r.ingredientes||[]).map(ing =>
+    `<div class="ingredient-item"><span>${ing}</span><span style="color:var(--text-2)">${KCAL_TABLE[ing.toLowerCase()]||'—'} kcal/100g</span></div>`
+  ).join('');
+
+  document.getElementById('recipeDetailContent').innerHTML = `
+    <div class="recipe-detail-header">
+      <div class="recipe-detail-emoji">${r.emoji||'🍽️'}</div>
+      <div class="recipe-detail-name">${r.nome}</div>
+      <div class="recipe-detail-meta">
+        <span>⏱️ ${r.tempo}min</span>
+        <span>🔥 ${r.kcal} kcal</span>
+        <span>${r.crianca ? '🧒 Criança ✓' : '🧒 Não adequada'}</span>
+      </div>
+      <div class="recipe-stars" style="justify-content:center;margin-top:6px">${stars}</div>
+    </div>
+
+    <div class="recipe-portions-slider">
+      <div class="range-label">
+        <span>Porções</span>
+        <span id="portionsVal">3</span>
+      </div>
+      <input type="range" min="1" max="8" value="3" oninput="updatePortions(${r.id},this.value)">
+    </div>
+
+    ${ingsHtml ? `<div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Ingredientes</div>
+    <div class="ingredient-list">${ingsHtml}</div>` : ''}
+
+    <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Preparação</div>
+    <div class="steps-list">${stepsHtml}</div>
+
+    <button class="btn-primary" onclick="addRecipeToPlan(${r.id})">📅 Adicionar ao planeamento</button>
+    <button class="btn-outline" style="width:100%;justify-content:center;margin-top:8px" onclick="markCooked(${r.id})">⭐ Já cozinhei hoje</button>
+    <button class="btn-secondary" onclick="closeRecipeModal()">Fechar</button>
+  `;
+  document.getElementById('recipeModal').classList.add('open');
+}
+
+function updatePortions(recipeId, val) {
+  document.getElementById('portionsVal').textContent = val;
+}
+
+function addRecipeToPlan(id) {
+  closeRecipeModal();
+  const r = state.recipes.find(x => x.id === id);
+  if (r) showToast(`📅 Seleciona o dia e o tipo de refeição no Planeamento para "${r.nome}"`, 'warning');
+  switchTab('plan', document.querySelector('[data-tab="plan"]'));
+}
+
+function markCooked(id) {
+  const r = state.recipes.find(x => x.id === id);
+  if (r) {
+    r.vezes = (r.vezes||0) + 1;
+    r.ultima = new Date().toISOString().split('T')[0];
+    saveRecipes();
+    showToast('⭐ Registado! Boa refeição!', 'success');
+    closeRecipeModal();
+  }
+}
+
+function closeRecipeModal(e) {
+  if (!e || e.target === e.currentTarget) {
+    document.getElementById('recipeModal').classList.remove('open');
+  }
+}
+
+// ===================================================
+// NEW RECIPE
+// ===================================================
+function openNewRecipe() {
+  document.getElementById('newRecipeModal').classList.add('open');
+  document.getElementById('nr-name').value = '';
+  document.getElementById('nr-emoji').value = '🍽️';
+  document.getElementById('nr-time').value = '';
+  document.getElementById('nr-kcal').value = '';
+  document.getElementById('nr-ingredients').value = '';
+  document.getElementById('nr-steps').value = '';
+  state.newRecipeRating = 4;
+  updateNewRatingUI();
+}
+
+function closeNewRecipeModal(e) {
+  if (!e || e.target === e.currentTarget) {
+    document.getElementById('newRecipeModal').classList.remove('open');
+  }
+}
+
+function setNewRating(val) {
+  state.newRecipeRating = val;
+  updateNewRatingUI();
+}
+
+function updateNewRatingUI() {
+  document.querySelectorAll('#nr-rating .star-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i < state.newRecipeRating);
+  });
+}
+
+function saveNewRecipe() {
+  const nome = document.getElementById('nr-name').value.trim();
+  if (!nome) { showToast('Escreve o nome!', 'error'); return; }
+  const newR = {
+    id: Date.now(),
+    nome,
+    emoji: document.getElementById('nr-emoji').value || '🍽️',
+    categoria: document.getElementById('nr-cat').value,
+    tempo: parseInt(document.getElementById('nr-time').value) || 30,
+    kcal: parseInt(document.getElementById('nr-kcal').value) || 350,
+    crianca: document.getElementById('nr-child').value === 'true',
+    rating: state.newRecipeRating,
+    vezes: 0,
+    ultima: null,
+    ingredientes: document.getElementById('nr-ingredients').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    steps: document.getElementById('nr-steps').value.split('\n').map(s=>s.trim()).filter(Boolean),
+  };
+  state.recipes.push(newR);
+  saveRecipes();
+  renderRecipes();
+  closeNewRecipeModal();
+  syncToServer();
+  showToast('✅ Receita guardada!', 'success');
+  confetti();
+}
+
+// ===================================================
+// NUTRITION
+// ===================================================
+const DAYS_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function renderNutrition() {
+  updateNutrition();
+}
+
+function updateNutrition() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const kcalByDay = DAYS.map(d => {
+    let sum = 0;
+    d.types.forEach(t => {
+      const meal = getMealData(weekId, d.idx, t);
+      if (meal?.kcal) sum += meal.kcal;
+    });
+    return sum;
+  });
+
+  const goal = 2000;
+  const maxKcal = Math.max(...kcalByDay, goal);
+  const chartHtml = kcalByDay.map((kcal, i) => {
+    const pct = Math.round((kcal / maxKcal) * 100);
+    const barClass = kcal > goal * 1.1 ? 'over' : kcal > goal * 0.8 ? 'good' : 'warn';
+    return `<div class="kcal-bar-wrap">
+      <div class="kcal-val">${kcal||''}</div>
+      <div class="kcal-bar ${barClass}" style="height:${Math.max(pct,4)}%"></div>
+      <div class="kcal-day-label">${DAYS_SHORT[i]}</div>
+    </div>`;
+  }).join('');
+  const chartEl = document.getElementById('kcalChart');
+  if (chartEl) chartEl.innerHTML = chartHtml;
+
+  // Semaphore
+  const allMeals = [];
+  DAYS.forEach(d => d.types.forEach(t => {
+    const m = getMealData(weekId, d.idx, t);
+    if (m) allMeals.push(m);
+  }));
+  const veggieCount = allMeals.filter(m => {
+    const r = state.recipes.find(x => x.nome === m.nome);
+    return r?.ingredientes?.some(i => ['brócolo','espinafres','cenoura','courgette','pimento','tomate'].includes(i.toLowerCase()));
+  }).length;
+  const proteinCount = allMeals.filter(m => {
+    const r = state.recipes.find(x => x.nome === m.nome);
+    return r?.ingredientes?.some(i => ['frango peito','frango coxa','carne picada','bacalhau','salmão','ovo'].includes(i.toLowerCase()));
+  }).length;
+  const processedCount = allMeals.filter(m => {
+    const r = state.recipes.find(x => x.nome === m.nome);
+    return r?.ingredientes?.some(i => ['fiambre','chouriço','salpicão'].includes(i.toLowerCase()));
+  }).length;
+
+  const semaphoreEl = document.getElementById('nutritionSemaphore');
+  if (semaphoreEl) semaphoreEl.innerHTML = [
+    { label: 'Legumes', val: veggieCount, good: 3 },
+    { label: 'Proteína', val: proteinCount, good: 5 },
+    { label: 'Processados', val: processedCount, bad: 3 },
+  ].map(s => {
+    let dotClass = 'green';
+    if (s.bad !== undefined) dotClass = s.val >= s.bad ? 'red' : s.val >= 1 ? 'yellow' : 'green';
+    else dotClass = s.val >= s.good ? 'green' : s.val >= 1 ? 'yellow' : 'red';
+    return `<div class="semaphore-item">
+      <div class="semaphore-dot ${dotClass}"></div>
+      <div class="semaphore-label">${s.label}</div>
+      <div style="font-size:18px;font-weight:800;margin-top:2px">${s.val}</div>
+    </div>`;
+  }).join('');
+
+  // Child panel
+  const totalChildKcal = kcalByDay.reduce((a,b) => a+b, 0) * 0.6; // child eats ~60%
+  const childEl = document.getElementById('childPanel');
+  if (childEl) childEl.innerHTML = `
+    <div class="child-stat">Calorias estimadas/dia: <strong>${Math.round(totalChildKcal / 7)} kcal</strong></div>
+    <div class="child-stat" style="margin-top:4px">Recomendado para 4 anos: <strong>1200–1400 kcal/dia</strong></div>
+    <div style="margin-top:8px;font-size:13px;${Math.round(totalChildKcal/7) >= 1200 && Math.round(totalChildKcal/7) <= 1400 ? 'color:var(--success)' : 'color:var(--warning)'}">
+      ${Math.round(totalChildKcal/7) >= 1200 && Math.round(totalChildKcal/7) <= 1400 ? '✅ Dentro do intervalo recomendado' : '⚠️ Fora do intervalo recomendado — ajusta as porções'}
+    </div>`;
+
+  // Spending bars
+  const weekSpend = (state.shopping[weekId] || []).reduce((a,i) => a+i.price, 0);
+  const spendEl = document.getElementById('spendingBars');
+  if (spendEl) {
+    const weeks = [
+      { label: 'Sem -3', val: weekSpend * 0.85 },
+      { label: 'Sem -2', val: weekSpend * 0.92 },
+      { label: 'Sem -1', val: weekSpend * 0.97 },
+      { label: 'Esta', val: weekSpend },
+    ];
+    const maxSpend = Math.max(...weeks.map(w=>w.val), 1);
+    spendEl.innerHTML = weeks.map(w => `
+      <div class="spend-row">
+        <div class="spend-label">${w.label}</div>
+        <div class="spend-bar-wrap">
+          <div class="spend-bar" style="width:${Math.round((w.val/maxSpend)*100)}%"></div>
+        </div>
+        <div class="spend-val">~${w.val.toFixed(0)}€</div>
+      </div>`).join('');
+  }
+}
+
+// ===================================================
+// TAB NAVIGATION
+// ===================================================
+const TAB_TITLES = {
+  plan: ['🗓️ Planeamento', null],
+  shop: ['🛒 Compras', null],
+  recipes: ['👨‍🍳 Receitas', null],
+  nutrition: ['📊 Nutrição', null],
+};
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  el.classList.add('active');
+
+  document.getElementById('headerTitle').textContent = TAB_TITLES[tab][0];
+
+  if (tab === 'shop') renderShopping();
+  if (tab === 'recipes') renderRecipes();
+  if (tab === 'nutrition') renderNutrition();
+
+  // Show/hide FABs
+  document.querySelectorAll('.fab').forEach(f => f.style.display = 'none');
+  if (tab === 'plan') {
+    document.querySelectorAll('.fab').forEach(f => f.style.display = 'flex');
+  } else if (tab === 'recipes') {
+    document.querySelector('.fab:not(.cart)').style.display = 'flex';
+  }
+}
+
+// ===================================================
+// SUPABASE CONFIG
+// ===================================================
+const SUPA_URL  = 'https://igdgqkzbvdpqjtcwxufl.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnZGdxa3pidmRwcWp0Y3d4dWZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNzk1MDIsImV4cCI6MjA5NjY1NTUwMn0.SgpdM_bxpcVz8UcEbdK9h1ZdHTd8xdr04omkcw0ygrg';
+const SUPA_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': 'Bearer ' + SUPA_KEY,
+  'Prefer': 'return=minimal',
+};
+
+async function supaFetch(path, options = {}) {
+  const res = await fetch(SUPA_URL + '/rest/v1/' + path, {
+    ...options,
+    headers: { ...SUPA_HEADERS, ...(options.headers || {}) },
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// ===================================================
+// SYNC — SUPABASE
+// ===================================================
+function startSync() {
+  syncFromSupabase();
+  subscribeRealtime();
+}
+
+async function syncFromSupabase() {
+  const dot = document.getElementById('syncDot');
+  if (dot) dot.className = 'sync-dot syncing';
+  try {
+    const weekId = getWeekId(state.currentWeekOffset);
+
+    // --- Plano ---
+    const planRows = await supaFetch(`plano?semana_id=eq.${encodeURIComponent(weekId)}&select=*`);
+    const planObj = {};
+    planRows.forEach(r => {
+      if (!planObj[r.dia]) planObj[r.dia] = {};
+      planObj[r.dia][r.tipo] = { nome: r.nome, autor: r.autor, sobras: r.sobras };
+    });
+    if (planRows.length > 0) {
+      state.plan[weekId] = planObj;
+      savePlan();
+      renderCurrentWeek();
+    }
+
+    // --- Compras ---
+    const shopRows = await supaFetch(`compras?semana_id=eq.${encodeURIComponent(weekId)}&select=*`);
+    if (shopRows.length > 0) {
+      state.shopping[weekId] = shopRows.map(r => ({
+        id: r.id, nome: r.nome, quantidade: r.quantidade,
+        categoria: r.categoria, price: r.price, done: r.done, autor: r.autor,
+      }));
+      saveShopping();
+      renderShopping();
+    }
+
+    if (dot) dot.className = 'sync-dot';
+    state.lastSync = new Date();
+  } catch(e) {
+    console.error('syncFromSupabase:', e);
+    if (dot) dot.className = 'sync-dot error';
+  }
+}
+
+async function syncPlanToSupabase() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const weekPlan = state.plan[weekId] || {};
+  // Upsert all slots for this week
+  const rows = [];
+  Object.entries(weekPlan).forEach(([dia, tipos]) => {
+    Object.entries(tipos).forEach(([tipo, meal]) => {
+      rows.push({
+        semana_id: weekId,
+        dia: parseInt(dia),
+        tipo,
+        nome: meal?.nome || null,
+        autor: meal?.autor || state.userName,
+        sobras: meal?.sobras || false,
+      });
+    });
+  });
+  if (!rows.length) return;
+  try {
+    await supaFetch('plano', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(rows),
+    });
+  } catch(e) { console.error('syncPlanToSupabase:', e); }
+}
+
+async function syncShoppingToSupabase() {
+  const weekId = getWeekId(state.currentWeekOffset);
+  const items = state.shopping[weekId] || [];
+  if (!items.length) return;
+  try {
+    // Delete existing week rows then re-insert (simplest approach for small lists)
+    await supaFetch(`compras?semana_id=eq.${encodeURIComponent(weekId)}`, { method: 'DELETE' });
+    const rows = items.map(i => ({
+      semana_id: weekId,
+      nome: i.nome,
+      quantidade: i.quantidade || '',
+      categoria: i.categoria || 'outros',
+      price: i.price || 0,
+      done: i.done || false,
+      autor: i.autor || state.userName,
+    }));
+    await supaFetch('compras', { method: 'POST', body: JSON.stringify(rows) });
+  } catch(e) { console.error('syncShoppingToSupabase:', e); }
+}
+
+// Realtime subscription via Supabase websocket
+function subscribeRealtime() {
+  // Supabase Realtime via raw WebSocket
+  const wsUrl = SUPA_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPA_KEY + '&vsn=1.0.0';
+  let ws;
+  function connect() {
+    ws = new WebSocket(wsUrl);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ topic: 'realtime:public:plano', event: 'phx_join', payload: {}, ref: '1' }));
+      ws.send(JSON.stringify({ topic: 'realtime:public:compras', event: 'phx_join', payload: {}, ref: '2' }));
+    };
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.event === 'phx_reply') return;
+      if (msg.topic === 'realtime:public:plano' || msg.topic === 'realtime:public:compras') {
+        const dot = document.getElementById('syncDot');
+        if (dot) dot.className = 'sync-dot syncing';
+        setTimeout(() => syncFromSupabase(), 300);
+      }
+      // Heartbeat
+      if (msg.event === 'heartbeat') {
+        ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: null }));
+      }
+    };
+    ws.onclose = () => setTimeout(connect, 5000); // auto-reconnect
+  }
+  connect();
+}
+
+// Legacy stub so older callers don't break
+async function syncToServer() { await syncPlanToSupabase(); }
+
+// ===================================================
+// TOAST
+// ===================================================
+function showToast(msg, type = '') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ===================================================
+// CONFETTI
+// ===================================================
+function confetti() {
+  const colors = ['#C06B4A','#D4866A','#8C7B6B','#9A4F33','#E8C4A0','#6A9E6F'];
+  for (let i = 0; i < 30; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.cssText = `
+      left: ${Math.random()*100}vw;
+      top: -20px;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      animation-delay: ${Math.random()*0.5}s;
+      animation-duration: ${1+Math.random()}s;
+      transform: rotate(${Math.random()*360}deg);
+    `;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 2000);
+  }
+}
+
+// ===================================================
+// SERVICE WORKER (inline via Blob)
+// ===================================================
+function registerSW() {
+  const swCode = `
+    const CACHE = 'mealplanner-v1';
+    const CACHE_RECIPES = 'mealplanner-recipes-v1';
+    const STATIC = ['/', '/index.html', '/manifest.json'];
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)).catch(()=>{}));
+    });
+    self.addEventListener('fetch', e => {
+      const url = new URL(e.request.url);
+      // Never cache shopping/plan API calls
+      if (url.pathname.includes('script.google.com')) return;
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('/index.html')))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+
+// ===================================================
+// NOTIFICATIONS via ntfy.sh
+// ===================================================
+function checkNotifications() {
+  const weekId = getWeekId(0);
+  const today = new Date().getDay();
+  const items = state.shopping[weekId] || [];
+  const pending = items.filter(i => !i.done).length;
+
+  let totalMeals = 0, filled = 0;
+  DAYS.forEach(d => {
+    d.types.forEach(t => {
+      totalMeals++;
+      if (getMealData(weekId, d.idx, t)) filled++;
+    });
+  });
+
+  // Sunday: plan reminder
+  if (today === 0 && filled < 2) {
+    sendNtfy('🗓️ Ainda não planeaste a semana! Toca para organizar as refeições.');
+  }
+  // Friday: shopping reminder
+  if (today === 5 && pending > 0) {
+    sendNtfy(`🛒 Tens ${pending} itens por comprar para esta semana.`);
+  }
+  // Wednesday: half week check
+  if (today === 3 && filled < totalMeals / 2) {
+    sendNtfy(`🍽️ Só tens ${filled}/${totalMeals} refeições planeadas esta semana.`);
+  }
+}
+
+async function sendNtfy(msg) {
+  const channel = localStorage.getItem('mealplanner_ntfy') || 'familia-refeicoes-' + btoa(state.userName||'fam').slice(0,8);
+  try {
+    await fetch(`https://ntfy.sh/${channel}`, { method: 'POST', body: msg });
+  } catch(e) {}
+}
+
+// ===================================================
+// DARK MODE TOGGLE
+// ===================================================
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark');
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('mealplanner_theme', isDark ? 'dark' : 'light');
+}
+
+function applyStoredTheme() {
+  const saved = localStorage.getItem('mealplanner_theme');
+  const btn = document.getElementById('themeToggle');
+  if (saved === 'dark') {
+    document.body.classList.add('dark');
+    if (btn) btn.textContent = '🌙';
+  } else {
+    document.body.classList.remove('dark');
+    if (btn) btn.textContent = '☀️';
+  }
+}
+
+// ===================================================
+// STARTUP
+// ===================================================
+window.addEventListener('DOMContentLoaded', () => {
+  applyStoredTheme();
+  init();
+  // Show all FABs initially
+  document.querySelectorAll('.fab').forEach(f => f.style.display = 'flex');
+  // Check notifications once per day
+  const lastCheck = localStorage.getItem('mealplanner_lastnotif');
+  const today = new Date().toDateString();
+  if (lastCheck !== today) {
+    checkNotifications();
+    localStorage.setItem('mealplanner_lastnotif', today);
+  }
+});
+</script>
+</body>
+</html>
